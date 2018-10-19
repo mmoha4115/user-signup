@@ -1,15 +1,14 @@
 from flask import Flask,render_template,request, redirect
-import os
-import cgi
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+#route for get
 @app.route('/')
 def signup():
     return render_template('user-signup.html')
 
-
+#functions to validate length, spaces, empty field, and '@' and '.' in email
 def length(field):
     if len(field) > 3 and len(field) < 20:
         return True
@@ -46,7 +45,6 @@ def use_pass(field):
         return False
     return True
 
-
 def eml(field):
     error = length(field)
     if error == False:
@@ -59,9 +57,7 @@ def eml(field):
         return False
     return True
 
-    
-
-
+#route for post
 @app.route('/', methods=['POST'])
 def signedup():
     username= request.form['username']
@@ -76,30 +72,36 @@ def signedup():
     password_error = ''
     verify_error = ''
     email_error = ''
+    succes_condition = 0    #counter if no error =0 - return succes.html
 
+    #validate username
     if use_pass(username) == False:
         username= ''
         username_error = main_msg.format('username')
-        password = ''
-        verify = password
+        succes_condition+=1
 
+    #validate password
     if use_pass(password) == False:
-        password= ''
         password_error = main_msg.format('password')
-        
+        succes_condition+=1
+
+    #validate verify-password
     if password != verify:
+        verify_error = verify_msg 
         print(verify_error)
-        verify_error = verify_msg
-        password = ''
-    
+        succes_condition+=1
+
+    #validate email
     if eml(email) == False:
         email = ''
         email_error = main_msg.format('email')
-    verify = password
-    
-    return render_template('user-signup.html', username=username, username_error=username_error, 
-    password=password, password_error=password_error, 
-    verify=verify, verify_error=verify_error,
-    email=email, email_error=email_error)
+    #if any error= render user-signup.html with errors else render succes.html
+    if succes_condition > 0:
+        return render_template('user-signup.html', username=username, username_error=username_error, 
+        password='', password_error=password_error, 
+        verify='', verify_error=verify_error,
+        email=email, email_error=email_error)
+    else:
+        return render_template('succes.html', username=username)
 
 app.run()
